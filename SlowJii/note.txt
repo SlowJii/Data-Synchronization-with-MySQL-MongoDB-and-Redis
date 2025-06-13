@@ -14,43 +14,13 @@ web, cũng như làm việc với URL
 Thư viện pathlib
 ------------------------------------------------
 
-db_config = {
-    "host": "172.17.0.2",
-    "port": 3306,
-    "user": "root",
-    "password": "wCVDhT5%1#1#LN#lR?6*8@jG59q^X8wm"
-}
+jars_path = ",".join([os.path.abspath(jar) for jar in jars])
 
-# Kiem tra config da ket noi duoc vao mySQL hay chua
-# db_config dang o dang dict, ** tuc la lay tat ca gia tri cua truong key:value trong dict
-# ** dung de giai nen dict va truyen cap gia tri key:value lam doi so cho mysql.connector.connect()
-connection = mysql.connector.connect(**db_config)
-print("--------------------------database connection established-------------------")
+    - os.path.abspath(): Chuyển đổi đường dẫn tương đối của file .jar thành đường dẫn tuyệt đối
+    VD: "libs/my-lib.jar" → "/home/user/project/libs/my-lib.jar"
+    -",".join(): Nối các phần tử trong danh sách thành một chuỗi duy nhất, phân cách bởi dấu phẩy
+    VD: ["a.jar", "b.jar"] -> "a.jar", "b.jar"
 
-database_name = "github_data"
-
-# tao doi tuong cursor object to mysql
-cursor = connection.cursor()
-cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database_name}")
-print(f"-----------------database '{database_name}' created-----------------------")
-
-connection.database = database_name
-
-schemaSQL_path = "/home/lehoang/PycharmProjects/Data-Synchronization-with-MySQL-MongoDB-and-Redis/src/schema.sql"
-with open(schemaSQL_path, 'r') as file:
-    sql_script = file.read()
-
-sql_command = sql_script.split(";")
-
-#print(sql_command)
-# ['CREATE TABLE Users(\n    user_id BIGINT PRIMARY KEY,\n    login VARCHAR(255),\n    gravatar_id VARCHAR(255),\n    url VARCHAR(255),\n    avatar_url VARCHAR(255)\n)', '\n\nCREATE TABLE Repositories(\n    repo_id BIGINT PRIMARY KEY ,\n    name VARCHAR(255),\n    url VARCHAR(255)\n)', '\n']
-# split tra ve ket qua duoi dang LIST, hai cau lenh phan cach nhau boi dau ,
-
-for command in sql_command:
-    if command.strip():
-        # print(command + "\n")
-        cursor.execute(command)
-        print(f"-----------executed command: \n {command.strip()}---------")
-
-connection.commit()
-print("-----------------file Schema.sql executed successfully-----------------")
+jars = ["libs/a.jar", "libs/b.jar"]
+jars_path = ",".join([os.path.abspath(jar) for jar in jars])
+# → "/full/path/libs/a.jar,/full/path/libs/b.jar"
