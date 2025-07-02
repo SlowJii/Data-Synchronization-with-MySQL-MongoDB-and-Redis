@@ -2,3 +2,5 @@ pyspark==3.5.4
 kafka-python
 mysql-connector-python
 python-dotenv
+pymongo
+redis

@@ -1,6 +1,6 @@
 CREATE TABLE Users(
     user_id BIGINT PRIMARY KEY,
-    login VARCHAR(255),
+    login VARCHAR(255) NOT NULL ,
     gravatar_id VARCHAR(255),
     url VARCHAR(255),
     avatar_url VARCHAR(255)
