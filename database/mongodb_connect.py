@@ -45,20 +45,3 @@ class MongoDBConnect:
         return self
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
-
-def main():
-    configMongo = get_database_config()
-    with MongoDBConnect(configMongo['mongodb'].uri, configMongo['mongodb'].database) as mongo_client:
-        create_mongodb_schema(mongo_client.connect())
-        mongo_client.db.Users.insert_one({
-            "user_id": 123456789012345,
-            "login": "gemini_user",
-            "gravatar_url": "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-            "url": "https://api.example.com/users/gemini_user",
-            "avatar_url": "https://avatars.example.com/u/12345"
-        })
-        validate_mongodb_schema(mongo_client.db)
-        print("-----------Inserted to MongoDB-------------")
-if __name__ == '__main__':
-    main()
-
