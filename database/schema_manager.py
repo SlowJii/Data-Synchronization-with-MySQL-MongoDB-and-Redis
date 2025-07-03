@@ -78,3 +78,35 @@ def validate_mysql_schema (cursor):
     else:
         print("--------------MySQL schema validated----------------")
 
+
+# ----------------- Redis ------------------------
+def create_redis_schema(client):
+    client.flushdb() # drop database
+    """
+    Redis khong co Schema nhu MongoDB va MySQL
+    Redis la database theo dang Key-Value va la in-memory database == rat ton RAM
+    {
+#             "user_id": 1234567890123451269,
+#             "login": "gemini_user_2",
+#             "gravatar_url": "https://i.pravatar.cc/150?u=a042581f4e29026704d1",
+#             "url": "https://api.example.com/users/gemini_user1",
+#             "avatar_url": "https://avatars.example.com/u/123451"
+#         }
+    """
+    try:
+        client.set("user:1:login","GoogleCodeExporter")
+        client.set("user:1:gravatar_url","https://i.pravatar.cc/150?u=a042581f4e29026704d1")
+        client.set("user:1:url","https://api.example.com/users/gemini_user1")
+        client.set("user:1:avatar_url","https://avatars.example.com/u/123451")
+        client.sadd("user_id", "user:1")
+        print("--------------Add data to Redis successfully--------------")
+    except Exception as e:
+        raise Exception(f"-----------Failed to add data to Redis schema: {e}------------") from e
+
+def validate_redis_schema (client):
+    if not client.get("user:1:login") == "GoogleCodeExporter":
+        raise ValueError("-----------Value login not found in Redis schema---------------")
+
+    if not client.sismember("user_id", "user:1"):
+        raise ValueError("-----------User not set in Redis schema---------------")
+    print("-----------Redis schema validated----------------")
