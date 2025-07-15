@@ -1,6 +1,5 @@
 import os
-from typing import Dict
-# import loadenv
+from typing import Dict, Optional
 from dotenv import load_dotenv
 from dataclasses import dataclass
 
@@ -23,11 +22,14 @@ class MySQLConfig(DatabaseConfig):
     user : str
     password : str
     database : str
+    jar_path: Optional[str] = None
+    table : str = "Users" # DEFAULT
 
 @dataclass
 class MongoDBConfig(DatabaseConfig):
     uri : str
     database : str
+    collection : str = "Users" # DEFAULT
 
 @dataclass
 class RedisConfig(DatabaseConfig):
@@ -36,6 +38,8 @@ class RedisConfig(DatabaseConfig):
     password : str
     port : int
     database : int
+    jar_path: Optional[str] = None
+    key_column : str = "id" # DEFAULT
 
 def get_database_config() -> Dict[str, DatabaseConfig]:
     # Doc config tu file .env va tra ve Dict chua cac doi tuong DatabaseConfig
@@ -51,14 +55,16 @@ def get_database_config() -> Dict[str, DatabaseConfig]:
             port=int(os.getenv("MYSQL_PORT")),
             user=os.getenv("MYSQL_USER"),
             password=os.getenv("MYSQL_PASSWORD"),
-            database=os.getenv("MYSQL_DB")
+            database=os.getenv("MYSQL_DB"),
+            jar_path=os.getenv("MYSQL_JAR_PATH")
         ),
         "redis" : RedisConfig(
             host=os.getenv("REDIS_HOST"),
             user=os.getenv("REDIS_USER"),
             password=os.getenv("REDIS_PASSWORD"),
             port=int(os.getenv("REDIS_PORT")),
-            database=os.getenv("REDIS_DB")
+            database=int(os.getenv("REDIS_DB")),
+            jar_path=os.getenv("REDIS_JAR_PATH")
         )
     }
 
@@ -67,8 +73,8 @@ def get_database_config() -> Dict[str, DatabaseConfig]:
 
     return config
 
-#dbConfig = get_database_config()
-#print(dbConfig)
+# dbConfig = get_database_config()
+# print(dbConfig)
 #print(dbConfig['mongodb'].uri)
 #print(dbConfig['mongodb'].database)
 """
@@ -79,4 +85,12 @@ Vay nen ket qua tra ve cua value se la mot class
 VD: 
 MongoDBConfig(uri='mongodb://slowjii:slowjii0211@localhost:27017', database='myapp_db')
 => Muon truy cap vao uri hay database thi phai .uri va .database
+"""
+
+"""
+{
+    'mongodb': MongoDBConfig(uri='mongodb://slowjii:slowjii0211@localhost:27017', database='github_data'), 
+    'mysql': MySQLConfig(host='172.17.0.2', port=3306, user='root', password='3Vh^ff/#j11aF%K%Z8&1V6vg7.1Gjo+M', database='github_data'), 
+    'redis': RedisConfig(host='localhost', user='slowjiiRedis', password='slowjii0211', port=6379, database='0')
+}
 """

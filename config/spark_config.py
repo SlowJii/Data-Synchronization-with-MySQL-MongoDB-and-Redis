@@ -1,85 +1,196 @@
 from typing import Optional, List, Dict
 import os
 from pyspark.sql import SparkSession
-from config.mysql_config import get_database_config
+from config.database_config import get_database_config
 
-# Cac worker deu duoc kiem soat va chi phoi boi master_url
-def create_spark_session(
-    app_name : str,
-    master_url : str = "local[*]",           # di lam kh dc chay tren local, chi dc chay tren server, log vao bang dia chi ip, port cua spark master
-    executor_memory : Optional[str] = "4g",  # RAM
-    executor_cores : Optional[int] = 2,    # CPU
-    driver_memory : Optional[str] = "2g",    # Drive memory
-    num_executors : Optional[int] = 3,       # Set so luong executor
-    jars : Optional[List[str]] = None,       # Config goi jar duoi dang LIST nham luu tru nhieu goi jar khac nhau
-    spark_conf : Optional[Dict[str,str]] = None,
-    log_level : str = "INFO"
-) -> SparkSession:
+class SparkConnect:
+    def __init__(
+            self,
+            app_name : str,
+            master_url: str = "local[*]",
+            executor_memory: Optional[str] = "4G",
+            executor_cores: Optional[int] = 2,
+            num_executor: Optional[int] = 3,
+            driver_memory: Optional[str] = "2G",
+            jar_packages: Optional[List[str]] = None,
+            spark_conf: Optional[Dict[str, str]] = None,
+            log_level: str = "INFO"):
+        self.app_name = app_name
+        self.spark = self.create_spark_session(master_url, executor_memory, executor_cores, num_executor, driver_memory, jar_packages, spark_conf, log_level)
 
-    builder = SparkSession.builder \
-        .appName(app_name) \
-        .master(master_url)
-    if executor_memory:
-        builder.config("spark.executor.memory", executor_memory)
-    if executor_cores:
-        builder.config("spark.executor.cores", executor_cores)
-    if driver_memory:
-        builder.config("spark.driver.memory", driver_memory)
-    if num_executors:
-        builder.config("spark.executor.instances", num_executors)
-    if jars:
-        jars_path = ",".join([os.path.abspath(jar) for jar in jars])
-        builder.config("spark.jars", jars_path)
+    def create_spark_session(
+            self,
+            master_url: str = "local[*]",
+            executor_memory : Optional[str] = "4G" ,
+            executor_cores: Optional[int] = 2,
+            num_executor: Optional[int] = 3,
+            driver_memory: Optional[str] = "2G",
+            jar_packages: Optional[List[str]] = None,
+            spark_conf: Optional[Dict[str,str]] = None,
+            log_level: str = "INFO"
+    ) -> SparkSession:
+        builder = SparkSession.builder \
+            .appName(self.app_name) \
+            .master(master_url)
+        if executor_memory:
+            builder.config("spark.executor.memory", executor_memory)
+        if executor_cores:
+            builder.config("spark.executor.cores", executor_cores)
+        if driver_memory:
+            builder.config("spark.driver.memory", driver_memory)
+        if num_executor:
+            builder.config("spark.executor.instances", num_executor)
 
-    # {"spark.sql.shuffle.partitions" : "10"} == spark_conf
-    if spark_conf:
-        for key,value in spark_conf.items():
-            builder.config(key,value)
+        if jar_packages:
+            jar_packages_url = ",".join([jar_package for jar_package in jar_packages])
+            builder.config("spark.jars.packages", jar_packages_url)
 
-    spark = builder.getOrCreate()
-    # Start he thong truoc khi set Log Level
-    spark.sparkContext.setLogLevel(log_level)
+        if spark_conf:
+            for key,value in spark_conf.items():
+                builder.config(key,value)
 
-    return spark
+        spark = builder.getOrCreate()
+        spark.sparkContext.setLogLevel(log_level)
+        return spark
+
+    def stop(self):
+        if self.spark:
+            self.spark.stop()
+            print("--------------------Stopping Spark Session---------------------")
+
+def get_spark_config() -> Dict:
+
+    db_configs = get_database_config()
+
+    return {
+        "mysql" : {
+            "table": db_configs["mysql"].table,
+            "jdbc_url": "jdbc:mysql://{}:{}/{}".format(db_configs["mysql"].host, db_configs["mysql"].port, db_configs["mysql"].database),
+            "config" : {
+                "host" : db_configs["mysql"].host,
+                "port" : db_configs["mysql"].port,
+                "user" : db_configs["mysql"].user,
+                "password" : db_configs["mysql"].password,
+                "database" : db_configs["mysql"].database
+            }
+        },
+        "mongodb" : {
+            "database" : db_configs["mongodb"].database,
+            "collection" : db_configs["mongodb"].collection,
+            "uri" : db_configs["mongodb"].uri
+        },
+        "redis" : {
+
+        }
+    }
+
+
+# if jars:
+#     jars_path = ",".join([os.path.abspath(jar) for jar in jars])
+#     builder.config("spark.jars.packages", jars_path)
+
 
 """
-spark = create_spark_session(
-    app_name = "SlowJii",
-    master_url = "local[*]",
-    executor_memory = "4g",
-    executor_cores = 2,
-    driver_memory = "2g",
-    num_executors = 3,
-    jars = None,
-    spark_conf = {"spark.sql.shuffle.partitions" : "10"},
-    log_level = "INFO"
-)
+{
+'mysql': {
+    'table': 'users',
+    'jdbc_url': 'jdbc:mysql://172.17.0.2:3306/github_data',
+    'config': {
+        'host': '172.17.0.2',
+        'port': 3306,
+        'user': 'root',
+        'password': '3Vh^ff/#j11aF%K%Z8&1V6vg7.1Gjo+M',
+    'database': 'github_data'
+    }
+},
+'mongodb': {},
+'redis': {}
+}
 """
 
-def connect_to_mysql(spark : SparkSession, config : Dict[str,str], table_name : str):
-    df = spark.read \
-        .format("jdbc") \
-        .option("url", "jdbc:mysql://172.17.0.2:3306/github_data") \
-        .option("dbtable", table_name) \
-        .option("user", config["user"]) \
-        .option("password", config["password"]) \
-        .option("driver", "com.mysql.cj.jdbc.Driver") \
-        .load()
-    return df
-
-jarPath = "../lib/mysql-connector-j-9.2.0.jar"
-
-spark = create_spark_session(
-    app_name = "SlowJii",
-    master_url = "local[*]",
-    executor_memory = "4g",
-    jars = [jarPath],
-    log_level = "INFO"
-)
-db_config = get_database_config()
-mysql_table = "Repositories"
-
-df = connect_to_mysql(spark, db_config, mysql_table)
-df.printSchema()
 
 
+
+# from typing import Optional, List, Dict
+# import os
+# from pyspark.sql import SparkSession
+# from config.database_config import get_database_config
+#
+#
+# class SparkConnect:
+#     def __init__(
+#             self,
+#             app_name: str,
+#             master_url: str = "local[*]",
+#             executor_memory: Optional[str] = "4G",
+#             executor_cores: Optional[int] = 2,
+#             num_executor: Optional[int] = 3,
+#             driver_memory: Optional[str] = "2G",
+#             spark_conf: Optional[Dict[str, str]] = None,  # Bỏ 'jar_packages'
+#             log_level: str = "INFO"):
+#         self.app_name = app_name
+#         # Sửa lại để chỉ nhận spark_conf
+#         self.spark = self.create_spark_session(master_url, executor_memory, executor_cores, num_executor, driver_memory,
+#                                                spark_conf, log_level)
+#
+#     def create_spark_session(
+#             self,
+#             master_url: str = "local[*]",
+#             executor_memory: Optional[str] = "4G",
+#             executor_cores: Optional[int] = 2,
+#             num_executor: Optional[int] = 3,
+#             driver_memory: Optional[str] = "2G",
+#             spark_conf: Optional[Dict[str, str]] = None,  # Bỏ 'jar_packages'
+#             log_level: str = "INFO"
+#     ) -> SparkSession:
+#         builder = SparkSession.builder \
+#             .appName(self.app_name) \
+#             .master(master_url)
+#
+#         if executor_memory:
+#             builder.config("spark.executor.memory", executor_memory)
+#         if executor_cores:
+#             builder.config("spark.executor.cores", executor_cores)
+#         if driver_memory:
+#             builder.config("spark.driver.memory", driver_memory)
+#         if num_executor:
+#             builder.config("spark.executor.instances", num_executor)
+#
+#         # Cấu hình chung từ spark_conf
+#         if spark_conf:
+#             for key, value in spark_conf.items():
+#                 builder.config(key, value)
+#
+#         spark = builder.getOrCreate()
+#         spark.sparkContext.setLogLevel(log_level)
+#         return spark
+#
+#     def stop(self):
+#         if self.spark:
+#             self.spark.stop()
+#             print("--------------------Stopping Spark Session---------------------")
+#
+#
+# # Hàm này vẫn giữ nguyên
+# def get_spark_config() -> Dict:
+#     db_configs = get_database_config()
+#     return {
+#         "mysql": {
+#             "table": db_configs["mysql"].table,
+#             "jdbc_url": f"jdbc:mysql://{db_configs['mysql'].host}:{db_configs['mysql'].port}/{db_configs['mysql'].database}",
+#             "config": {
+#                 "host": db_configs["mysql"].host,
+#                 "port": db_configs["mysql"].port,
+#                 "user": db_configs["mysql"].user,
+#                 "password": db_configs["mysql"].password,
+#                 "database": db_configs["mysql"].database
+#             }
+#         },
+#         "mongodb": {
+#             "database": db_configs["mongodb"].database,
+#             "collection": db_configs["mongodb"].collection,
+#             "uri": db_configs["mongodb"].uri
+#         },
+#         "redis": {}
+#     }
+#
