@@ -3,7 +3,7 @@ from mysql.connector import Error
 
 # ----------------------  MongoDB  ---------------------------
 def create_mongodb_schema(db):
-    #db.drop_collection("Users")
+    db.drop_collection("Users")
     try:
         db.create_collection("Users", validator={
             "$jsonSchema": {
@@ -31,7 +31,7 @@ def create_mongodb_schema(db):
         print("--------------Collection Users created------------")
     except Exception as e:
         print(f"-------------Collection Users already exists or other error: {e}-----------")
-    db.Users.create_index("user_id", unique=True)
+    # db.Users.create_index("user_id", unique=True)
 
 def validate_mongodb_schema(db):
     collections = db.list_collection_names()

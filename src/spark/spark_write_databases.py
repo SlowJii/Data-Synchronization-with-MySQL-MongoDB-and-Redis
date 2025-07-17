@@ -37,13 +37,6 @@ class SparkWriteDatabases:
     def spark_write_mongodb(self, df : DataFrame, database : str, collection : str, uri : str, mode = "append"):
         # mongodb://slowjii:slowjii0211@localhost:27017
         # mongodb://<username>:<password>@<host>:<port>/<database>
-        # df.write \
-        #     .format("mongodb") \
-        #     .option("uri", uri) \
-        #     .option("database", database) \
-        #     .option("collection", collection) \
-        #     .mode(mode) \
-        #     .save()
         df.write \
             .format("mongo") \
             .option("uri", uri) \

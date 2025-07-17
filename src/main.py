@@ -11,6 +11,10 @@ def main():
 #-------------------- MongoDB ---------------------
     with MongoDBConnect(config['mongodb'].uri, config['mongodb'].database) as mongo_client:
         create_mongodb_schema(mongo_client.connect())
+
+
+
+
         # mongo_client.db.Users.insert_one({
         #     "user_id": 1234567890123451270,
         #     "login": "gemini_user_2",
@@ -21,15 +25,15 @@ def main():
         # validate_mongodb_schema(mongo_client.db)
         # print("----------Inserted to MongoDB-------------")
 
-# -------------------- MySQL -------------------------
-#     with MySQLConnect(
-#             config['mysql'].host,
-#             config['mysql'].port,
-#             config['mysql'].user,
-#             config['mysql'].password,
-#             config['mysql'].database) as mysql_client:
-#         connection,cursor = mysql_client.connection, mysql_client.cursor
-#         create_mysql_schema(connection, cursor)
+#-------------------- MySQL -------------------------
+    with MySQLConnect(
+            config['mysql'].host,
+            config['mysql'].port,
+            config['mysql'].user,
+            config['mysql'].password,
+            config['mysql'].database) as mysql_client:
+        connection,cursor = mysql_client.connection, mysql_client.cursor
+        create_mysql_schema(connection, cursor)
 
 
 
