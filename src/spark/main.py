@@ -6,7 +6,7 @@ from pyspark.sql.types import *
 from src.spark.spark_write_databases import SparkWriteDatabases
 
 def main():
-    db_configs = get_database_config()
+    db_configs = get_spark_config()
 
     # JAR
     jars = [
@@ -58,10 +58,22 @@ def main():
         col('actor.avatar_url').alias('avatar_url'),
         col('spark').alias('spark')
     )
+
+    # df_write_table = df.select(
+    #     col('actor.id').alias('user_id'),
+    #     col('actor.login').alias('login'),
+    #     col('actor.gravatar_id').alias('gravatar_id'),
+    #     col('actor.url').alias('url'),
+    #     col('actor.avatar_url').alias('avatar_url')
+    # )
     # ============= SPARK WRITE ================
     spark_config = get_spark_config()
     df_write = SparkWriteDatabases(spark_connect, spark_config)
     df_write.spark_write_databases(df_write_table, mode = "append")
+
+    df_read = SparkWriteDatabases(spark_connect, spark_config)
+    df_read.validate_spark_mysql(db_configs["mysql"]["table"], db_configs["mysql"]["jdbc_url"], db_configs["mysql"]["config"])
+    print("read data successfully")
 
     spark_connect.stop()
 

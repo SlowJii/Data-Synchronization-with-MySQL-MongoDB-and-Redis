@@ -15,8 +15,18 @@ class MySQLConnect:
 
     def connect(self):
         try:
-            self.connection = mysql.connector.connect(**self.config)
+            db_config = self.config.copy()
+            db_name = db_config.pop('database', None)
+            if not db_name:
+                raise ValueError("Database name is missing in the Configuration !")
+            # **db_config de truyen vao config kh co database
+            self.connection = mysql.connector.connect(**db_config)
             self.cursor = self.connection.cursor()
+
+            # Khoi tao Database neu chua ton tai, dung dau ` de ne ki tu dac biet
+            self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}`")
+            self.cursor.execute(f"USE `{db_name}`")
+
             print(f"---------------- Connected to MySQL Database -----------")
             return self.connection, self.cursor
         except Error as e:

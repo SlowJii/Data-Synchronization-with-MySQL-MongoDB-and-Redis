@@ -47,9 +47,6 @@ def validate_mongodb_schema(db):
 SQL_FILE_PATH = Path("../src/schema.sql")
 DATABASE_NAME = "github_data"
 def create_mysql_schema(connection, cursor):
-    # khoi tao database neu chua ton tai
-    cursor.execute("CREATE DATABASE IF NOT EXISTS {};".format(DATABASE_NAME))
-    cursor.execute(f"USE {DATABASE_NAME}")
     try:
         cursor.execute("SHOW TABLES LIKE 'Users'")
         if cursor.fetchone():
