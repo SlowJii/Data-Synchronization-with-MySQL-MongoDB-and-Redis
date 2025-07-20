@@ -11,7 +11,7 @@ class SparkWriteDatabases:
         self.db_config = db_config
 
     # ========================= SPARK WRITE SQL =========================
-    def spark_write_mysql(self, df : DataFrame, table_name : str, jdbc_url : str, config : Dict[str,str], mode : str = "append"):
+    def spark_write_mysql(self, df_write : DataFrame, table_name : str, jdbc_url : str, config : Dict[str,str], mode : str = "append"):
         try:
             with MySQLConnect(config["host"], config["port"], config["user"], config["password"], config["database"]) as mysql_client:
                 connection, cursor = mysql_client.connection, mysql_client.cursor
@@ -30,7 +30,7 @@ class SparkWriteDatabases:
         except Exception as e:
             raise Exception(f"-------------Fail to Connect to MySQL: {e}")
 
-        df.write \
+        df_write.write \
             .format("jdbc") \
             .option("url", jdbc_url) \
             .option("driver", "com.mysql.cj.jdbc.Driver") \
@@ -42,16 +42,16 @@ class SparkWriteDatabases:
         print(f"--------------- Spark Write data to MySQL: {table_name}-----------------")
 
     #=============== VALIDATE SPARK WRITE TO MYSQL ========#
-    def validate_spark_mysql(self, table_name : str, jdbc_url : str, config : Dict):
-        df = self.spark.read \
+    def validate_spark_mysql(self,df_write : DataFrame, table_name : str, jdbc_url : str, config : Dict):
+
+        df_read = self.spark.read \
             .format("jdbc") \
             .option("url", jdbc_url) \
             .option("driver", "com.mysql.cj.jdbc.Driver") \
-            .option("dbtable", table_name) \
+            .option("dbtable", f"(SELECT * FROM {table_name} WHERE spark='spark_write') AS subquery") \
             .option("user", config["user"]) \
             .option("password", config["password"]) \
             .load()
-        df.show()
 
     #=============== SPARK WRITE MONGODB ==================#
     def spark_write_mongodb(self, df : DataFrame, database : str, collection : str, uri : str, mode = "append"):
@@ -75,6 +75,7 @@ class SparkWriteDatabases:
             self.db_config["mysql"]["config"],
             mode
         )
+        print("---------------- Spark Write data to MySQL -----------------")
         self.spark_write_mongodb(
             df,
             self.db_config["mongodb"]["database"],

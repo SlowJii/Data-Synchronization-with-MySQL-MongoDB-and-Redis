@@ -37,6 +37,7 @@ def main():
 
 
 
+
         # # Su dung placeholder (%s) de chong SQL Injection
         # sql_query = "INSERT INTO Users(user_id, login, gravatar_id, url, avatar_url) VALUES (%s, %s, %s, %s, %s)"
         # new_sample = (
