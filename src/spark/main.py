@@ -72,8 +72,7 @@ def main():
     df_write.spark_write_databases(df_write_table, mode = "append")
 
     df_read = SparkWriteDatabases(spark_connect, spark_config)
-    df_read.validate_spark_mysql(db_configs["mysql"]["table"], db_configs["mysql"]["jdbc_url"], db_configs["mysql"]["config"])
-    print("read data successfully")
+    df_read.validate_spark_mysql(df_write_table,db_configs["mysql"]["table"], db_configs["mysql"]["jdbc_url"], db_configs["mysql"]["config"])
 
     spark_connect.stop()
 

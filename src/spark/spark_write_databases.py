@@ -53,6 +53,37 @@ class SparkWriteDatabases:
             .option("password", config["password"]) \
             .load()
 
+        def subtract_dataframe(df_write: DataFrame, df_read: DataFrame):
+            # Spark write chi co the dua thieu hoac du nen phai dung df_write - df_read
+            result = df_write.exceptAll(df_read)
+            if not result.isEmpty():
+                print(f"--------------- Missing {result.count()} rows in {table_name} -----------------")
+                result.write \
+                    .format("jdbc") \
+                    .option("url", jdbc_url) \
+                    .option("driver", "com.mysql.cj.jdbc.Driver") \
+                    .option("dbtable", table_name) \
+                    .option("user", config["user"]) \
+                    .option("password", config["password"]) \
+                    .mode("append") \
+                    .save()
+                print("--------------- Insert Missing Records Successfully--------------------")
+        # So sanh DU truoc roi moi DUNG sau
+        if df_write.count() == df_read.count():
+            print(f"--------------- Validate Nums of Records Successfully: {df_write.count()} / {df_read.count()}--------------------")
+            subtract_dataframe(df_write, df_read)
+        else:
+            subtract_dataframe(df_write, df_read)
+
+        # Sau khi Validate thanh cong thi xoa cot danh dau Spark_Write
+        with MySQLConnect(config["host"], config["port"], config["user"], config["password"], config["database"]) as mysql_client:
+            connection, cursor = mysql_client.connection, mysql_client.cursor
+            drop_spark_query = f"ALTER TABLE {table_name} DROP COLUMN spark"
+            cursor.execute(drop_spark_query)
+            connection.commit()
+            print("--------------- DROP SPARK_WRITE TEMP ----------------")
+            mysql_client.close()
+
     #=============== SPARK WRITE MONGODB ==================#
     def spark_write_mongodb(self, df : DataFrame, database : str, collection : str, uri : str, mode = "append"):
         # mongodb://slowjii:slowjii0211@localhost:27017
