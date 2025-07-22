@@ -58,7 +58,8 @@ def main():
         col('actor.avatar_url').alias('avatar_url'),
         col('spark').alias('spark')
     )
-
+    # print("------------------------ SCHEMA OF DATAFRAME WRITE ----------------------")
+    # df_write_table.printSchema()
     # df_write_table = df.select(
     #     col('actor.id').alias('user_id'),
     #     col('actor.login').alias('login'),
@@ -72,7 +73,7 @@ def main():
     df_write.spark_write_databases(df_write_table, mode = "append")
 
     df_read = SparkWriteDatabases(spark_connect, spark_config)
-    df_read.validate_spark_mysql(df_write_table,db_configs["mysql"]["table"], db_configs["mysql"]["jdbc_url"], db_configs["mysql"]["config"])
+    df_read.validate_spark_write_databases(df_write_table)
 
     spark_connect.stop()
 

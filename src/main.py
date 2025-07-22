@@ -11,19 +11,9 @@ def main():
 #-------------------- MongoDB ---------------------
     with MongoDBConnect(config['mongodb'].uri, config['mongodb'].database) as mongo_client:
         create_mongodb_schema(mongo_client.connect())
-
-
-
-
-        # mongo_client.db.Users.insert_one({
-        #     "user_id": 1234567890123451270,
-        #     "login": "gemini_user_2",
-        #     "gravatar_url": "https://i.pravatar.cc/150?u=a042581f4e29026704d1",
-        #     "url": "https://api.example.com/users/gemini_user1",
-        #     "avatar_url": "https://avatars.example.com/u/123451"
-        # })
-        # validate_mongodb_schema(mongo_client.db)
-        # print("----------Inserted to MongoDB-------------")
+        # Insert ban ghi test
+        validate_mongodb_schema(mongo_client.db)
+        print("----------Inserted to MongoDB-------------")
 
 #-------------------- MySQL -------------------------
     with MySQLConnect(
