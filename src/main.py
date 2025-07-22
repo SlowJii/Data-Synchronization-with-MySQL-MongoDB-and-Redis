@@ -1,7 +1,7 @@
 from database.mongodb_connect import MongoDBConnect
 from config.database_config import get_database_config
 from database.redis_connect import RedisConnect
-from database.schema_manager import create_mongodb_schema,validate_mongodb_schema,create_mysql_schema,validate_mysql_schema, create_redis_schema,validate_redis_schema
+from database.schema_manager import create_mongodb_schema,validate_mongodb_schema,create_mysql_schema,validate_mysql_schema, create_redis_schema,validate_redis_schema,create_mysql_trigger
 from database.mysql_connect import MySQLConnect
 def main():
 
@@ -24,8 +24,7 @@ def main():
             config['mysql'].database) as mysql_client:
         connection,cursor = mysql_client.connection, mysql_client.cursor
         create_mysql_schema(connection, cursor)
-
-
+        create_mysql_trigger(connection, cursor)
 
 
         # # Su dung placeholder (%s) de chong SQL Injection

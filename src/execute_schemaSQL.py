@@ -4,7 +4,7 @@ from pathlib import Path
 from mysql.connector import Error
 
 DATABASE_NAME = "github_data"
-URL_PATH = Path("/home/lehoang/PycharmProjects/Data-Synchronization-with-MySQL-MongoDB-and-Redis/src/schema.sql")
+URL_PATH = Path("/sql/schema.sql")
 
 def connect_to_mysql(config):
     try:

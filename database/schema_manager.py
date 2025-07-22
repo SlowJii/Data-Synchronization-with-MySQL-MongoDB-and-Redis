@@ -1,7 +1,7 @@
 from pathlib import Path
 from mysql.connector import Error
 
-# ----------------------  MongoDB  ---------------------------
+# =============================== MongoDB  ====================================
 def create_mongodb_schema(db):
     db.drop_collection("Users")
     try:
@@ -43,8 +43,8 @@ def validate_mongodb_schema(db):
     #     raise Exception("user_id not found in MongoDB")
     print("MongoDB schema validated")
 
-# ----------------------  MySQL  --------------------------
-SQL_FILE_PATH = Path("../src/schema.sql")
+# ===============================  MYSQL =============================
+SQL_FILE_PATH = Path("../sql/schema.sql")
 DATABASE_NAME = "github_data"
 def create_mysql_schema(connection, cursor):
     try:
@@ -74,9 +74,31 @@ def validate_mysql_schema (cursor):
         raise ValueError("-----------Table does not exist && Wrong Schema ----------------")
     else:
         print("--------------MySQL schema validated----------------")
+TRIGGER_PATH = "/home/lehoang/PycharmProjects/Data-Synchronization-with-MySQL-MongoDB-and-Redis/sql/trigger.sql"
+def create_mysql_trigger(connection, cursor):
+    try:
+        with open(TRIGGER_PATH, "r", encoding='utf-8') as trigger_file:
+            trigger_script = trigger_file.read()
+        parts = trigger_script.split("DELIMITER //")
+        init_commands = parts[0]
+        # Tao cac bang luu Trigger
+        for command in init_commands.split(";"):
+            if command.strip():
+                cursor.execute(command)
 
+        # Thuc thi cau lenh Trigger
+        if len(parts) > 1:
+            trigger_command_block = parts[1]
+            trigger_command_block = trigger_command_block.split("DELIMITER ;")[0]
+            for command in trigger_command_block.split("//"):
+                if command.strip():
+                    cursor.execute(command)
+        connection.commit()
+        print("------------MySQL trigger created----------------")
+    except Error as e:
+        print(f"-----------Failed to create MySQL trigger: {e}-----------")
 
-# ----------------- Redis ------------------------
+# ================================= REDIS =====================
 def create_redis_schema(client):
     client.flushdb() # drop database
     """
