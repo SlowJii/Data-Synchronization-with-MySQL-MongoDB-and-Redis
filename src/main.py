@@ -24,7 +24,7 @@ def main():
             config['mysql'].database) as mysql_client:
         connection,cursor = mysql_client.connection, mysql_client.cursor
         create_mysql_schema(connection, cursor)
-        create_mysql_trigger(connection, cursor)
+        #create_mysql_trigger(connection, cursor)
 
 
         # # Su dung placeholder (%s) de chong SQL Injection
